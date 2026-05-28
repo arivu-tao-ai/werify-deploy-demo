@@ -80,7 +80,7 @@ jobs:
   gate:
     name: Werify Human Sign-off
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ fromJSON(inputs.timeout_minutes) + 5 }}
+    timeout-minutes: ${{ inputs.timeout_minutes }}
 
     outputs:
       proof_json: ${{ steps.poll.outputs.proof_json }}
@@ -158,10 +158,11 @@ jobs:
           WERIFY_API_URL: ${{ inputs.werify_api_url }}
           REQUEST_ID:     ${{ steps.request.outputs.request_id }}
           TOKEN:          ${{ steps.request.outputs.token }}
-          TIMEOUT_SECS:   ${{ fromJSON(inputs.timeout_minutes) * 60 }}
+          TIMEOUT_MINS:   ${{ inputs.timeout_minutes }}
         run: |
           # Poll every 30s. Each iteration consumes 30s, so max iterations
           # = timeout_minutes * 2. Default 30 min = 60 iterations.
+          TIMEOUT_SECS=$(( TIMEOUT_MINS * 60 ))
           MAX_ITER=$(( TIMEOUT_SECS / 30 ))
           ELAPSED=0
 
@@ -201,5 +202,5 @@ jobs:
           done
 
           echo "approved=false" >> $GITHUB_OUTPUT
-          echo "::error::Timed out waiting for human approval after ${{ inputs.timeout_minutes }} minutes."
+          echo "::error::Timed out waiting for human approval after ${TIMEOUT_MINS} minutes."
           exit 1
